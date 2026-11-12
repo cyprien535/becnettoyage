@@ -1,0 +1,8 @@
+{
+  "name": " BEC Nettoyage - Propreté Plus Bénin",
+  "description": "Application professionnelle de services de nettoyage à Cotonou, Abomey-Calavi et Porto-Novo : bureaux, chantiers, appartements et devis en ligne.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
