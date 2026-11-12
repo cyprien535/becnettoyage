@@ -120,9 +120,14 @@ export const Footer: React.FC<FooterProps> = ({ navigate }) => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2.5">
                 <Phone className="w-4 h-4 text-[#00d2ff] shrink-0 mt-0.5" />
-                <a href={`tel:${siteConfig.phone}`} className="hover:text-white transition-colors">
-                  {siteConfig.phoneDisplay}
-                </a>
+                <div className="flex flex-col gap-0.5">
+                  <a href={`tel:${siteConfig.phone}`} className="hover:text-white transition-colors font-medium">
+                    {siteConfig.phoneDisplay}
+                  </a>
+                  <a href={`tel:${siteConfig.phone2}`} className="hover:text-white transition-colors font-medium">
+                    {siteConfig.phone2Display}
+                  </a>
+                </div>
               </li>
               <li className="flex items-start gap-2.5">
                 <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />

@@ -438,7 +438,7 @@ _Envoyé depuis l'application BEC Nettoyage_`;
                       <input
                         type="tel"
                         required
-                        placeholder="Ex. : (+229) 01 47 78 18"
+                        placeholder="Ex. : 01 63 58 30 33"
                         value={data.telephone}
                         onChange={(e) => setData({ ...data, telephone: e.target.value })}
                         className="w-full pl-10 pr-4 py-3 bg-[#f5f9fe] border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:border-[#0a5be8]"

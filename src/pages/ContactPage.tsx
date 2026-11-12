@@ -98,13 +98,21 @@ export const ContactPage: React.FC<ContactPageProps> = ({ navigate }) => {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-slate-400 uppercase">Téléphone</p>
-                    <a
-                      href={`tel:${siteConfig.phone}`}
-                      className="text-base font-bold text-[#02164f] hover:text-[#0a5be8] transition-colors"
-                    >
-                      {siteConfig.phoneDisplay}
-                    </a>
-                    <p className="text-[11px] text-slate-500">Appel direct pour prise de rendez-vous</p>
+                    <div className="flex flex-col gap-1 mt-0.5">
+                      <a
+                        href={`tel:${siteConfig.phone}`}
+                        className="text-base font-bold text-[#02164f] hover:text-[#0a5be8] transition-colors"
+                      >
+                        {siteConfig.phoneDisplay}
+                      </a>
+                      <a
+                        href={`tel:${siteConfig.phone2}`}
+                        className="text-base font-bold text-[#02164f] hover:text-[#0a5be8] transition-colors"
+                      >
+                        {siteConfig.phone2Display}
+                      </a>
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-1">Appel direct pour prise de rendez-vous ou urgence</p>
                   </div>
                 </div>
 

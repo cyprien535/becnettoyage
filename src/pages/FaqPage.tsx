@@ -145,10 +145,17 @@ export const FaqPage: React.FC<FaqPageProps> = ({ navigate }) => {
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <a
                 href={`tel:${siteConfig.phone}`}
-                className="px-5 py-2.5 bg-[#0a5be8] text-white text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2"
+                className="px-4 py-2.5 bg-[#0a5be8] hover:bg-[#0742a8] text-white text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-colors"
               >
                 <Phone className="w-4 h-4" />
                 <span>Appeler {siteConfig.phoneDisplay}</span>
+              </a>
+              <a
+                href={`tel:${siteConfig.phone2}`}
+                className="px-4 py-2.5 bg-white text-[#0a5be8] hover:bg-blue-50 border border-blue-200 text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2 transition-colors"
+              >
+                <Phone className="w-4 h-4" />
+                <span>Appeler {siteConfig.phone2Display}</span>
               </a>
               <a
                 href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(siteConfig.whatsappMessage)}`}

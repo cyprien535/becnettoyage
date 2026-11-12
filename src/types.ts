@@ -4,7 +4,11 @@ export interface SiteConfig {
   baseline: string;
   phone: string;
   phoneDisplay: string;
+  phone2: string;
+  phone2Display: string;
+  phonesDisplay: string;
   whatsapp: string;
+  whatsappDisplay?: string;
   whatsappMessage: string;
   email: string;
   villes: string[];

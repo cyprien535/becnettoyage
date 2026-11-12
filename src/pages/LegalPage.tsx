@@ -77,7 +77,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ initialTab = 'mentions-leg
               </p>
               <ul className="list-disc pl-5 space-y-1">
                 <li><strong>Siège social :</strong> République du Bénin (Couverture : Cotonou, Abomey-Calavi, Porto-Novo)</li>
-                <li><strong>Téléphone professionnel :</strong> {siteConfig.phoneDisplay}</li>
+                <li><strong>Téléphone professionnel :</strong> {siteConfig.phonesDisplay}</li>
                 <li><strong>E-mail :</strong> {siteConfig.email}</li>
                 <li><strong>Directeur de la publication :</strong> Direction Générale {siteConfig.brandName}</li>
               </ul>

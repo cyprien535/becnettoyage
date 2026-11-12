@@ -40,41 +40,87 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
-            {/* Left column : Hero content */}
-            <div className="lg:col-span-7">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-xs sm:text-sm font-semibold text-[#00d2ff] mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-8 items-center">
+            {/* 1. Image promotionnelle : VUE EN PREMIER SUR MOBILE (order-1), à droite sur grand écran (lg:order-2) */}
+            <div className="order-1 lg:order-2 lg:col-span-5 flex justify-center lg:justify-end mb-2 lg:mb-0">
+              <div className="relative w-full max-w-[250px] min-[400px]:max-w-[300px] sm:max-w-[360px] lg:max-w-[440px]">
+                {/* Lueur d'ambiance d'arrière-plan */}
+                <div className="absolute -inset-4 sm:-inset-6 bg-gradient-to-tr from-[#0a5be8]/40 via-[#00d2ff]/25 to-transparent rounded-full blur-2xl sm:blur-3xl pointer-events-none" />
+
+                {/* Anneaux décoratifs géométriques professionnels */}
+                <div className="absolute -top-6 -right-6 w-36 sm:w-44 h-36 sm:h-44 rounded-full border border-[#00d2ff]/30 pointer-events-none hidden sm:block animate-pulse" />
+                <div className="absolute -bottom-6 -left-6 w-28 sm:w-32 h-28 sm:h-32 rounded-full border border-white/15 pointer-events-none hidden sm:block" />
+
+                {/* Cadre professionnel double couche (Forme Arche Capsule Moderne) */}
+                <div className="relative z-10 p-2 sm:p-2.5 rounded-t-[120px] min-[400px]:rounded-t-[140px] sm:rounded-t-[180px] rounded-br-[36px] sm:rounded-br-[48px] rounded-bl-[28px] sm:rounded-bl-[36px] bg-gradient-to-b from-white/35 via-white/15 to-white/5 border border-white/30 shadow-2xl backdrop-blur-md">
+                  {/* Container intérieur avec fond harmonisé et coins sculptés */}
+                  <div className="relative overflow-hidden rounded-t-[112px] min-[400px]:rounded-t-[132px] sm:rounded-t-[172px] rounded-br-[30px] sm:rounded-br-[40px] rounded-bl-[22px] sm:rounded-bl-[28px] bg-gradient-to-b from-[#072a63]/90 via-[#02164f] to-[#010f37]">
+                    {/* Image promotionnelle optimisée WebP ultra-rapide */}
+                    <picture>
+                      <source
+                        type="image/webp"
+                        srcSet="/images/hero-portrait-bec-480w.webp 480w, /images/hero-portrait-bec-880w.webp 880w"
+                        sizes="(max-width: 640px) 290px, (max-width: 1024px) 360px, 440px"
+                      />
+                      <img
+                        src="/images/hero-portrait-bec-880w.webp"
+                        alt="Agent d'entretien professionnelle BEC Nettoyage en tenue officielle"
+                        width={440}
+                        height={480}
+                        loading="eager"
+                        fetchPriority="high"
+                        decoding="async"
+                        className="w-full h-auto object-cover max-h-[360px] min-[400px]:max-h-[420px] sm:max-h-[500px] lg:max-h-[540px] select-none pointer-events-none scale-[1.02] transform transition-transform duration-700 hover:scale-105"
+                        style={{
+                          WebkitMaskImage:
+                            'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 84%, rgba(0,0,0,0.7) 92%, rgba(0,0,0,0) 100%)',
+                          maskImage:
+                            'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 84%, rgba(0,0,0,0.7) 92%, rgba(0,0,0,0) 100%)',
+                        }}
+                      />
+                    </picture>
+
+                    {/* Gradient subtil en overlay sur la partie inférieure */}
+                    <div className="absolute inset-x-0 bottom-0 h-14 sm:h-16 bg-gradient-to-t from-[#02164f] via-[#02164f]/40 to-transparent pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Hero content : sous l'image sur mobile (order-2), à gauche sur grand écran (lg:order-1) */}
+            <div className="order-2 lg:order-1 lg:col-span-7 text-center lg:text-left flex flex-col items-center lg:items-start">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-md text-xs sm:text-sm font-semibold text-[#00d2ff] mb-4 sm:mb-6">
                 <span className="w-2 h-2 rounded-full bg-[#00d2ff] animate-pulse"></span>
                 <span>Services professionnels de propreté au Bénin</span>
               </div>
 
-              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.12] text-white mb-6">
+              <h1 className="text-2xl min-[400px]:text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] text-white mb-4 sm:mb-6">
                 Vos espaces impeccables,{' '}
                 <span className="text-[#00d2ff]">sans compromis</span>
               </h1>
 
-              <p className="text-base sm:text-lg text-slate-200 leading-relaxed mb-8 max-w-2xl">
+              <p className="text-sm sm:text-lg text-slate-200 leading-relaxed mb-6 sm:mb-8 max-w-2xl">
                 Bureaux, appartements et locaux en fin de chantier : nous prenons en charge le nettoyage de vos espaces avec méthode, ponctualité et un vrai souci du détail.
               </p>
 
-              <div className="flex flex-wrap items-center gap-4 mb-8">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 mb-6 sm:mb-8 w-full">
                 <button
                   onClick={() => handleNav('devis')}
-                  className="px-6 sm:px-7 py-3.5 bg-[#0a5be8] hover:bg-[#0742a8] text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer active:scale-95 text-sm sm:text-base"
+                  className="px-5 sm:px-7 py-3 sm:py-3.5 bg-[#0a5be8] hover:bg-[#0742a8] text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-xl transition-all flex items-center gap-2 cursor-pointer active:scale-95 text-xs sm:text-base"
                 >
                   <span>Demander un devis</span>
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
                 <button
                   onClick={() => handleNav('contact')}
-                  className="px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2 cursor-pointer text-sm sm:text-base"
+                  className="px-5 sm:px-6 py-3 sm:py-3.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl border border-white/20 backdrop-blur-md transition-all flex items-center gap-2 cursor-pointer text-xs sm:text-base"
                 >
                   <span>Nous contacter</span>
                 </button>
               </div>
 
-              <div className="flex flex-wrap items-center gap-6 text-xs sm:text-sm text-slate-300 pt-3 border-t border-white/10">
+              <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 text-xs sm:text-sm text-slate-300 pt-3 border-t border-white/10 w-full">
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-[#00d2ff]" />
                   <span>Interventions 7j/7</span>
@@ -86,52 +132,6 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-[#00d2ff]" />
                   <span>Devis garanti sous 24h</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Right column: Image promotionnelle dans une forme pro architecturale */}
-            <div className="lg:col-span-5 flex justify-center lg:justify-end">
-              <div className="relative w-full max-w-[340px] sm:max-w-[400px] lg:max-w-[440px]">
-                {/* Lueur d'ambiance d'arrière-plan */}
-                <div className="absolute -inset-6 bg-gradient-to-tr from-[#0a5be8]/40 via-[#00d2ff]/25 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-                {/* Anneaux décoratifs géométriques professionnels */}
-                <div className="absolute -top-6 -right-6 w-44 h-44 rounded-full border border-[#00d2ff]/30 pointer-events-none hidden sm:block animate-pulse" />
-                <div className="absolute -bottom-6 -left-6 w-32 h-32 rounded-full border border-white/15 pointer-events-none hidden sm:block" />
-
-                {/* Cadre professionnel double couche (Forme Arche Capsule Moderne) */}
-                <div className="relative z-10 p-2 sm:p-2.5 rounded-t-[140px] sm:rounded-t-[180px] rounded-br-[48px] rounded-bl-[36px] bg-gradient-to-b from-white/35 via-white/15 to-white/5 border border-white/30 shadow-2xl backdrop-blur-md">
-                  {/* Container intérieur avec fond harmonisé et coins sculptés */}
-                  <div className="relative overflow-hidden rounded-t-[132px] sm:rounded-t-[172px] rounded-br-[40px] rounded-bl-[28px] bg-gradient-to-b from-[#072a63]/90 via-[#02164f] to-[#010f37]">
-                    {/* Image promotionnelle optimisée WebP ultra-rapide */}
-                    <picture>
-                      <source
-                        type="image/webp"
-                        srcSet="/images/hero-portrait-bec-480w.webp 480w, /images/hero-portrait-bec-880w.webp 880w"
-                        sizes="(max-width: 640px) 340px, (max-width: 1024px) 400px, 440px"
-                      />
-                      <img
-                        src="/images/hero-portrait-bec-880w.webp"
-                        alt="Agent d'entretien professionnelle BEC Nettoyage en tenue officielle"
-                        width={440}
-                        height={480}
-                        loading="eager"
-                        fetchPriority="high"
-                        decoding="async"
-                        className="w-full h-auto object-cover max-h-[500px] sm:max-h-[540px] select-none pointer-events-none scale-[1.02] transform transition-transform duration-700 hover:scale-105"
-                        style={{
-                          WebkitMaskImage:
-                            'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 84%, rgba(0,0,0,0.7) 92%, rgba(0,0,0,0) 100%)',
-                          maskImage:
-                            'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 84%, rgba(0,0,0,0.7) 92%, rgba(0,0,0,0) 100%)',
-                        }}
-                      />
-                    </picture>
-
-                    {/* Gradient subtil en overlay sur la partie inférieure */}
-                    <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#02164f] via-[#02164f]/40 to-transparent pointer-events-none" />
-                  </div>
                 </div>
               </div>
             </div>
@@ -356,14 +356,23 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
                   </div>
                   <div>
                     <span className="text-[11px] font-bold text-[#0a5be8] block tracking-wide">
-                      08:00 – 18:00
+                      08:00 – 18:00 · Lundi au Samedi
                     </span>
-                    <a
-                      href="tel:+2290147781841"
-                      className="text-xs sm:text-sm font-extrabold text-[#02164f] hover:text-[#0a5be8] transition-colors tracking-tight block"
-                    >
-                      (+229) 0147781841 - 0194868767 - 0166775535
-                    </a>
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs sm:text-sm font-extrabold text-[#02164f]">
+                      <a
+                        href={`tel:${siteConfig.phone}`}
+                        className="hover:text-[#0a5be8] transition-colors tracking-tight"
+                      >
+                        {siteConfig.phoneDisplay}
+                      </a>
+                      <span className="text-slate-400">/</span>
+                      <a
+                        href={`tel:${siteConfig.phone2}`}
+                        className="hover:text-[#0a5be8] transition-colors tracking-tight"
+                      >
+                        {siteConfig.phone2Display}
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -662,8 +671,16 @@ export const HomePage: React.FC<HomePageProps> = ({ navigate }) => {
             </a>
           </div>
 
-          <p className="text-xs text-slate-300 mt-6">
-            Ou par téléphone : <a href={`tel:${siteConfig.phone}`} className="underline font-bold text-white">{siteConfig.phoneDisplay}</a> · Réponse assurée
+          <p className="text-xs sm:text-sm text-slate-300 mt-6">
+            Ou par téléphone :{' '}
+            <a href={`tel:${siteConfig.phone}`} className="underline font-bold text-white hover:text-[#00d2ff] transition-colors">
+              {siteConfig.phoneDisplay}
+            </a>
+            {' ou '}
+            <a href={`tel:${siteConfig.phone2}`} className="underline font-bold text-white hover:text-[#00d2ff] transition-colors">
+              {siteConfig.phone2Display}
+            </a>
+            {' · Réponse assurée'}
           </p>
         </div>
       </section>
