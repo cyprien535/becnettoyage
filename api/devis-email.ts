@@ -38,12 +38,31 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function cleanEnvValue(value?: string): string {
+  const trimmed = (value || '').trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
 function isSmtpConfigured(): boolean {
   return Boolean(
-    process.env.SMTP_HOST &&
-      process.env.SMTP_USER &&
-      process.env.SMTP_PASS
+    cleanEnvValue(process.env.SMTP_HOST) &&
+      cleanEnvValue(process.env.SMTP_USER) &&
+      cleanEnvValue(process.env.SMTP_PASS)
   );
+}
+
+function getCreateTransport() {
+  const nm = nodemailer as unknown as {
+    createTransport?: typeof nodemailer.createTransport;
+    default?: { createTransport?: typeof nodemailer.createTransport };
+  };
+  return nm.createTransport ?? nm.default?.createTransport;
 }
 
 async function sendPdgNotificationEmail(payload: DevisEmailPayload): Promise<boolean> {
@@ -52,24 +71,22 @@ async function sendPdgNotificationEmail(payload: DevisEmailPayload): Promise<boo
     return false;
   }
 
-  const smtpPort = Number(process.env.SMTP_PORT || 587);
-  const smtpSecure = process.env.SMTP_SECURE === 'true' || smtpPort === 465;
+  const createTransport = getCreateTransport();
+  if (!createTransport) {
+    throw new Error('NODEMAILER_UNAVAILABLE');
+  }
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number.isFinite(smtpPort) ? smtpPort : 587,
-    secure: smtpSecure,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+  const smtpHost = cleanEnvValue(process.env.SMTP_HOST);
+  const smtpUser = cleanEnvValue(process.env.SMTP_USER);
+  const smtpPass = cleanEnvValue(process.env.SMTP_PASS);
+  const rawPort = Number(cleanEnvValue(process.env.SMTP_PORT) || '587');
+  const primaryPort = Number.isFinite(rawPort) && rawPort > 0 ? rawPort : 587;
 
   const pdgEmail =
-    process.env.PDG_EMAIL?.trim() || 'olakiki302@gmail.com';
+    cleanEnvValue(process.env.PDG_EMAIL) || 'olakiki302@gmail.com';
   const fromAddress =
-    process.env.SMTP_FROM?.trim() ||
-    `BEC Nettoyage <${process.env.SMTP_USER}>`;
+    cleanEnvValue(process.env.SMTP_FROM) ||
+    `BEC Nettoyage <${smtpUser}>`;
 
   const isPonctuel = payload.frequenceType === 'une_fois';
   const frequenceLibelle = isPonctuel
@@ -195,14 +212,46 @@ async function sendPdgNotificationEmail(payload: DevisEmailPayload): Promise<boo
     ? rawClientEmail
     : undefined;
 
-  const info = await transporter.sendMail({
+  const mailOptions = {
     from: fromAddress,
     to: pdgEmail,
     replyTo: validReplyTo,
     subject: `[Devis ${payload.reference}] ${payload.typeLocal} à ${payload.ville} — ${payload.nomComplet}`,
     text: textBody,
     html: htmlBody,
-  });
+  };
+
+  const sendOnPort = async (port: number) => {
+    const transporter = createTransport({
+      host: smtpHost,
+      port,
+      secure: port === 465,
+      connectionTimeout: 4000,
+      greetingTimeout: 4000,
+      socketTimeout: 5000,
+      auth: {
+        user: smtpUser,
+        pass: smtpPass,
+      },
+    });
+    return transporter.sendMail(mailOptions);
+  };
+
+  let info;
+  try {
+    info = await sendOnPort(primaryPort);
+  } catch (primaryError) {
+    const err = primaryError as { code?: string; responseCode?: number };
+    const isAuthOrPolicyError =
+      err?.code === 'EAUTH' ||
+      (typeof err?.responseCode === 'number' && err.responseCode >= 500);
+    if (primaryPort === 465 && !isAuthOrPolicyError) {
+      console.warn('Primary SMTP port 465 failed, retrying via STARTTLS port 587:', err?.code);
+      info = await sendOnPort(587);
+    } else {
+      throw primaryError;
+    }
+  }
 
   console.log('CEO notification email sent:', {
     reference: payload.reference,
@@ -276,11 +325,25 @@ export default async function handler(req: VercelReq, res: VercelRes) {
       details,
     });
   } catch (mailError) {
-    console.error('Failed to send CEO notification email:', mailError);
+    const err = mailError as {
+      code?: string;
+      responseCode?: number;
+      command?: string;
+      message?: string;
+    };
+    console.error('Failed to send CEO notification email:', {
+      code: err?.code,
+      responseCode: err?.responseCode,
+      command: err?.command,
+      message: err?.message,
+    });
     return res.status(500).json({
       ok: false,
       emailSent: false,
       error: 'Échec de l’envoi SMTP.',
+      code: err?.code || 'SMTP_ERROR',
+      responseCode: err?.responseCode,
+      command: err?.command,
     });
   }
 
