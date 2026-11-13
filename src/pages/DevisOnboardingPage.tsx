@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { siteConfig } from '../data/siteData';
 import { Breadcrumb } from '../components/Breadcrumb';
+import { saveDevisToFirestore } from '../lib/firebase';
 import {
   MapPin,
   Building2,
@@ -21,7 +22,9 @@ import {
   ShieldCheck,
   Send,
   Copy,
-  Check
+  Check,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 interface DevisOnboardingProps {
@@ -70,6 +73,10 @@ export const DevisOnboardingPage: React.FC<DevisOnboardingProps> = ({ navigate }
   });
 
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [stepError, setStepError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [quoteReference, setQuoteReference] = useState<string>('');
   const [copied, setCopied] = useState<boolean>(false);
 
   // Quick quartier suggestions based on selected city
@@ -80,27 +87,63 @@ export const DevisOnboardingPage: React.FC<DevisOnboardingProps> = ({ navigate }
     Autre: ['Ouidah', 'Allada', 'Bohicon', 'Autre localité'],
   };
 
-  const handleNext = () => {
-    // Step validation
+  const handleNext = async () => {
+    setStepError(null);
+    setSubmitError(null);
+
+    // Step validation (synchronized with firebase-blueprint.json)
     if (currentStep === 1) {
-      if (!data.ville) return;
+      if (!data.ville || data.ville.trim().length < 2) {
+        setStepError("Veuillez sélectionner votre ville d'intervention.");
+        return;
+      }
     }
     if (currentStep === 2) {
-      if (!data.nomComplet.trim() || !data.telephone.trim()) {
-        alert('Veuillez renseigner votre nom et votre numéro de téléphone.');
+      if (data.nomComplet.trim().length < 2 || data.telephone.trim().length < 4) {
+        setStepError('Veuillez renseigner votre nom complet (min. 2 caractères) et un numéro de téléphone valide.');
         return;
       }
     }
     if (currentStep < totalSteps) {
       setCurrentStep((prev) => prev + 1);
       window.scrollTo({ top: 120, behavior: 'smooth' });
-    } else {
+      return;
+    }
+
+    // Final step: save to Firebase Firestore & notify CEO by email
+    setIsSubmitting(true);
+    try {
+      const { reference } = await saveDevisToFirestore(data);
+
+      // Trigger CEO email notification via backend endpoint (non-blocking if SMTP fails)
+      try {
+        await fetch('/api/devis-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reference,
+            ...data,
+          }),
+        });
+      } catch (emailErr) {
+        console.warn('CEO email notification call failed:', emailErr);
+      }
+
+      setQuoteReference(reference);
       setIsSubmitted(true);
       window.scrollTo({ top: 100, behavior: 'smooth' });
+    } catch {
+      setSubmitError(
+        "Une erreur est survenue lors de l'enregistrement de votre demande. Vous pouvez réessayer ou envoyer votre demande directement sur WhatsApp."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handlePrev = () => {
+    setStepError(null);
+    setSubmitError(null);
     if (currentStep > 1) {
       setCurrentStep((prev) => prev - 1);
       window.scrollTo({ top: 120, behavior: 'smooth' });
@@ -710,13 +753,35 @@ _Envoyé depuis l'application BEC Nettoyage_`;
               </div>
             )}
 
+            {/* INLINE VALIDATION / SUBMISSION ERROR */}
+            {(stepError || submitError) && (
+              <div className="mt-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start gap-2.5">
+                  <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+                  <span>{stepError || submitError}</span>
+                </div>
+                {submitError && (
+                  <a
+                    href={`https://wa.me/${siteConfig.whatsapp}?text=${encodeURIComponent(generateWhatsAppMessage())}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#25d366] hover:bg-[#20ba59] text-white font-bold text-xs transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>Envoyer sur WhatsApp</span>
+                  </a>
+                )}
+              </div>
+            )}
+
             {/* NAV BUTTONS */}
             <div className="flex items-center justify-between pt-8 border-t border-slate-100 mt-8">
               {currentStep > 1 ? (
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className="px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold flex items-center gap-2 cursor-pointer transition-colors"
+                  disabled={isSubmitting}
+                  className="px-5 py-3 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold flex items-center gap-2 cursor-pointer transition-colors disabled:opacity-50"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   <span>Retour</span>
@@ -728,25 +793,45 @@ _Envoyé depuis l'application BEC Nettoyage_`;
               <button
                 type="button"
                 onClick={handleNext}
-                className="px-7 py-3.5 bg-[#0a5be8] hover:bg-[#0742a8] text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                disabled={isSubmitting}
+                className="px-7 py-3.5 bg-[#0a5be8] hover:bg-[#0742a8] disabled:bg-[#0a5be8]/70 text-white font-bold rounded-xl text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95 disabled:cursor-wait"
               >
-                <span>{currentStep === totalSteps ? 'Finaliser et voir le récapitulatif' : 'Continuer'}</span>
-                <ArrowRight className="w-4 h-4" />
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Enregistrement et envoi en cours...</span>
+                  </>
+                ) : currentStep === totalSteps ? (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Envoyer ma demande de devis</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Continuer</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
           </div>
         ) : (
-          /* ================= RÉCAPITULATIF & ENVOI DIRECT ================= */
+          /* ================= RÉCAPITULATIF & CONFIRMATION ================= */
           <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-lg animate-in zoom-in-95 duration-300">
             <div className="text-center max-w-lg mx-auto mb-8">
               <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 shadow-xs">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
+              {quoteReference && (
+                <span className="inline-block px-3 py-1 rounded-full bg-[#e7effd] text-[#0a5be8] text-xs font-bold font-mono mb-3">
+                  Référence : {quoteReference}
+                </span>
+              )}
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#02164f]">
-                Votre devis est prêt à être transmis !
+                Votre demande de devis a bien été envoyée !
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-1">
-                Voici le récapitulatif des paramètres configurés. Choisissez le mode d'envoi le plus rapide :
+              <p className="text-xs sm:text-sm text-slate-600 mt-2">
+                Toutes vos informations ont été enregistrées et transmises à la direction de BEC Nettoyage. Nous vous recontactons très rapidement via {data.contactPrefere}.
               </p>
             </div>
 

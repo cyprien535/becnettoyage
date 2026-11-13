@@ -1,0 +1,164 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global helper primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && (
+          exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+          || request.auth.token.email == 'sciencesmcv@gmail.com'
+          || request.auth.token.email == 'olakiki302@gmail.com'
+        );
+    }
+
+    function isValidDevisRequest(data) {
+      return data.keys().hasAll([
+          'reference',
+          'ville',
+          'typeLocal',
+          'superficieTranche',
+          'nomComplet',
+          'telephone',
+          'contactPrefere',
+          'frequenceType',
+          'emailSent',
+          'statut',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'reference',
+          'ville',
+          'quartier',
+          'typeLocal',
+          'superficieTranche',
+          'nomComplet',
+          'telephone',
+          'email',
+          'contactPrefere',
+          'frequenceType',
+          'delaiPonctuel',
+          'datePrecise',
+          'rythmeMensuel',
+          'joursPreferes',
+          'details',
+          'emailSent',
+          'statut',
+          'createdAt'
+        ])
+        && data.reference is string
+        && data.reference.size() >= 8
+        && data.reference.size() <= 32
+        && data.reference.matches('^BEC-[0-9]{8}-[A-F0-9]{4}$')
+        && data.ville is string
+        && data.ville.size() >= 2
+        && data.ville.size() <= 100
+        && (!('quartier' in data) || (data.quartier is string && data.quartier.size() <= 255))
+        && data.typeLocal is string
+        && data.typeLocal.size() >= 2
+        && data.typeLocal.size() <= 150
+        && data.superficieTranche is string
+        && data.superficieTranche.size() >= 2
+        && data.superficieTranche.size() <= 100
+        && data.nomComplet is string
+        && data.nomComplet.size() >= 2
+        && data.nomComplet.size() <= 200
+        && data.telephone is string
+        && data.telephone.size() >= 4
+        && data.telephone.size() <= 80
+        && (!('email' in data) || (data.email is string && data.email.size() <= 200))
+        && data.contactPrefere is string
+        && data.contactPrefere.size() <= 30
+        && data.contactPrefere in ['WhatsApp', 'Téléphone']
+        && data.frequenceType is string
+        && data.frequenceType.size() <= 30
+        && data.frequenceType in ['une_fois', 'chaque_mois']
+        && (!('delaiPonctuel' in data) || (data.delaiPonctuel is string && data.delaiPonctuel.size() <= 150))
+        && (!('datePrecise' in data) || (data.datePrecise is string && data.datePrecise.size() <= 50))
+        && (!('rythmeMensuel' in data) || (data.rythmeMensuel is string && data.rythmeMensuel.size() <= 150))
+        && (!('joursPreferes' in data) || (data.joursPreferes is string && data.joursPreferes.size() <= 150))
+        && (!('details' in data) || (data.details is string && data.details.size() <= 2000))
+        && data.emailSent is bool
+        && data.statut is string
+        && data.statut.size() <= 30
+        && data.statut in ['nouveau', 'en_cours', 'traite', 'archive']
+        && data.createdAt is timestamp;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'role', 'createdAt'])
+        && data.keys().hasOnly(['email', 'role', 'createdAt'])
+        && data.email is string
+        && data.email.size() >= 5
+        && data.email.size() <= 200
+        && data.role is string
+        && data.role.size() <= 20
+        && data.role in ['admin', 'pdg']
+        && data.createdAt is timestamp;
+    }
+
+    // Quote requests collection:
+    // - Public visitors can submit (create) a strictly validated quote request
+    // - Only verified admins can read, list, update status, or delete (protects all PII)
+    match /devis_requests/{devisId} {
+      allow get: if isValidId(devisId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(devisId)
+        && isValidDevisRequest(incoming())
+        && incoming().reference == devisId
+        && incoming().statut == 'nouveau'
+        && incoming().emailSent == false
+        && incoming().createdAt == request.time;
+      allow update: if isValidId(devisId)
+        && isAdmin()
+        && isValidDevisRequest(incoming())
+        && existing().statut != 'archive'
+        && incoming().createdAt == existing().createdAt
+        && incoming().reference == existing().reference
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly(['statut'])
+          || incoming().diff(existing()).affectedKeys().hasOnly(['emailSent'])
+          || incoming().diff(existing()).affectedKeys().hasOnly(['statut', 'details'])
+        );
+      allow delete: if isValidId(devisId) && isAdmin();
+    }
+
+    // Admins collection: strictly managed by verified admins only
+    match /admins/{adminId} {
+      allow get: if isValidId(adminId) && isAdmin();
+      allow list: if isAdmin();
+      allow create: if isValidId(adminId)
+        && isAdmin()
+        && isValidAdminUser(incoming())
+        && incoming().createdAt == request.time;
+      allow update: if isValidId(adminId)
+        && isAdmin()
+        && isValidAdminUser(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['role']);
+      allow delete: if isValidId(adminId) && isAdmin();
+    }
+  }
+}

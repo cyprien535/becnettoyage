@@ -1,0 +1,155 @@
+{
+  "entities": {
+    "DevisRequest": {
+      "title": "DevisRequest",
+      "description": "Demande de devis soumise via le parcours d'onboarding BEC Nettoyage",
+      "type": "object",
+      "properties": {
+        "reference": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 32,
+          "pattern": "^BEC-[0-9]{8}-[A-F0-9]{4}$",
+          "description": "Référence unique de la demande de devis"
+        },
+        "ville": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Ville d'intervention"
+        },
+        "quartier": {
+          "type": "string",
+          "maxLength": 255,
+          "description": "Quartier ou repère géographique"
+        },
+        "typeLocal": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 150,
+          "description": "Type d'espace à nettoyer"
+        },
+        "superficieTranche": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100,
+          "description": "Tranche de superficie estimée"
+        },
+        "nomComplet": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 200,
+          "description": "Nom complet ou raison sociale du client"
+        },
+        "telephone": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 80,
+          "description": "Numéro de téléphone ou WhatsApp du client"
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Adresse e-mail facultative du client"
+        },
+        "contactPrefere": {
+          "type": "string",
+          "enum": ["WhatsApp", "Téléphone"],
+          "description": "Canal de contact préféré du client"
+        },
+        "frequenceType": {
+          "type": "string",
+          "enum": ["une_fois", "chaque_mois"],
+          "description": "Fréquence ponctuelle ou mensuelle"
+        },
+        "delaiPonctuel": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Délai souhaité pour une intervention ponctuelle"
+        },
+        "datePrecise": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "Date précise souhaitée"
+        },
+        "rythmeMensuel": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Rythme mensuel souhaité"
+        },
+        "joursPreferes": {
+          "type": "string",
+          "maxLength": 150,
+          "description": "Créneau ou jours préférés"
+        },
+        "details": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Précisions complémentaires"
+        },
+        "emailSent": {
+          "type": "boolean",
+          "description": "Indique si la notification e-mail au PDG a été envoyée"
+        },
+        "statut": {
+          "type": "string",
+          "enum": ["nouveau", "en_cours", "traite", "archive"],
+          "description": "Statut de traitement du devis"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Horodatage serveur de création"
+        }
+      },
+      "required": [
+        "reference",
+        "ville",
+        "typeLocal",
+        "superficieTranche",
+        "nomComplet",
+        "telephone",
+        "contactPrefere",
+        "frequenceType",
+        "emailSent",
+        "statut",
+        "createdAt"
+      ]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Administrateur autorisé de BEC Nettoyage",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 200
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "pdg"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "role", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/devis_requests/{devisId}": {
+      "schema": {
+        "$ref": "#/entities/DevisRequest"
+      },
+      "description": "Demandes de devis clients stockées dans Firestore"
+    },
+    "/admins/{adminId}": {
+      "schema": {
+        "$ref": "#/entities/AdminUser"
+      },
+      "description": "Liste des administrateurs autorisés"
+    }
+  }
+}
