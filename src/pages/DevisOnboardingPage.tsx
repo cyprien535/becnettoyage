@@ -77,6 +77,7 @@ export const DevisOnboardingPage: React.FC<DevisOnboardingProps> = ({ navigate }
   const [stepError, setStepError] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [quoteReference, setQuoteReference] = useState<string>('');
+  const [emailDelivered, setEmailDelivered] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
 
   // Quick quartier suggestions based on selected city
@@ -115,9 +116,10 @@ export const DevisOnboardingPage: React.FC<DevisOnboardingProps> = ({ navigate }
     try {
       const { reference } = await saveDevisToFirestore(data);
 
-      // Trigger CEO email notification via backend endpoint (non-blocking if SMTP fails)
+      // Trigger CEO email notification via backend endpoint
+      let wasEmailSent = false;
       try {
-        await fetch('/api/devis-email', {
+        const emailRes = await fetch('/api/devis-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -125,10 +127,16 @@ export const DevisOnboardingPage: React.FC<DevisOnboardingProps> = ({ navigate }
             ...data,
           }),
         });
+        const contentType = emailRes.headers.get('content-type') || '';
+        if (emailRes.ok && contentType.includes('application/json')) {
+          const emailJson = await emailRes.json();
+          wasEmailSent = Boolean(emailJson?.emailSent);
+        }
       } catch (emailErr) {
         console.warn('CEO email notification call failed:', emailErr);
       }
 
+      setEmailDelivered(wasEmailSent);
       setQuoteReference(reference);
       setIsSubmitted(true);
       window.scrollTo({ top: 100, behavior: 'smooth' });
@@ -828,10 +836,14 @@ _Envoyé depuis l'application BEC Nettoyage_`;
                 </span>
               )}
               <h2 className="text-2xl sm:text-3xl font-extrabold text-[#02164f]">
-                Votre demande de devis a bien été envoyée !
+                {emailDelivered
+                  ? 'Votre demande de devis a bien été envoyée !'
+                  : 'Votre demande de devis a bien été enregistrée !'}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-2">
-                Toutes vos informations ont été enregistrées et transmises à la direction de BEC Nettoyage. Nous vous recontactons très rapidement via {data.contactPrefere}.
+                {emailDelivered
+                  ? `Toutes vos informations ont été enregistrées et transmises à la direction de BEC Nettoyage. Nous vous recontactons très rapidement via ${data.contactPrefere}.`
+                  : 'Votre dossier est bien sauvegardé. Pour un traitement immédiat par notre équipe, cliquez sur le bouton WhatsApp ci-dessous.'}
               </p>
             </div>
 

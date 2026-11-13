@@ -189,16 +189,30 @@ async function sendPdgNotificationEmail(payload: DevisEmailPayload): Promise<boo
     </div>
   `;
 
-  await transporter.sendMail({
+  const rawClientEmail = payload.email?.trim() || '';
+  const validReplyTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawClientEmail)
+    ? rawClientEmail
+    : undefined;
+
+  const info = await transporter.sendMail({
     from: fromAddress,
     to: pdgEmail,
-    replyTo: payload.email?.trim() ? payload.email.trim() : undefined,
+    replyTo: validReplyTo,
     subject: `[Devis ${payload.reference}] ${payload.typeLocal} à ${payload.ville} — ${payload.nomComplet}`,
     text: textBody,
     html: htmlBody,
   });
 
-  return true;
+  console.log('CEO notification email sent:', {
+    reference: payload.reference,
+    to: pdgEmail,
+    messageId: info.messageId,
+    accepted: info.accepted,
+    rejected: info.rejected,
+    response: info.response,
+  });
+
+  return Array.isArray(info.accepted) && info.accepted.length > 0;
 }
 
 async function startServer() {
@@ -255,14 +269,15 @@ async function startServer() {
       });
     } catch (mailError) {
       console.error('Failed to send CEO notification email:', mailError);
-      return res.status(200).json({
-        ok: true,
+      return res.status(500).json({
+        ok: false,
         emailSent: false,
+        error: 'Échec de l’envoi SMTP.',
       });
     }
 
     return res.status(200).json({
-      ok: true,
+      ok: emailSent,
       emailSent,
     });
   });
